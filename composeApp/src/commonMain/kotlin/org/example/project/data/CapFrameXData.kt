@@ -54,8 +54,8 @@ data class CaptureData(
     val AllowsTearing: List<Int>,
     val PresentMode: List<Int>,
     val SyncInterval: List<Int>,
-    val Dropped: List<Int>,
-    val QPCTime: List<Long>,
+    val Dropped: List<Boolean>,
+    val QPCTime: List<Double>,
     val GpuActive: List<Double>? = null,
     val PcLatency: List<Double>? = null
 )

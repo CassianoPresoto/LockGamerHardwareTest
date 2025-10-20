@@ -37,6 +37,8 @@ class HardwareViewModel(
                 val configs = repository.getAllConfigs()
                 uiState = uiState.copy(savedConfigs = configs)
             } catch (e: Exception) {
+                println("[HardwareViewModel] Erro ao carregar configurações: ${e.message}")
+                e.printStackTrace()
                 uiState = uiState.copy(error = "Erro ao carregar configurações: ${e.message}")
             }
         }
@@ -66,6 +68,10 @@ class HardwareViewModel(
                     showSaveDialog = true
                 )
             } catch (e: Exception) {
+                println("[HardwareViewModel] Erro ao processar arquivo JSON:")
+                println("Mensagem: ${e.message}")
+                println("Tipo: ${e::class.simpleName}")
+                e.printStackTrace()
                 uiState = uiState.copy(
                     isLoading = false,
                     error = "Erro ao processar arquivo JSON: ${e.message}"
@@ -81,7 +87,7 @@ class HardwareViewModel(
                 val stats = uiState.currentStats ?: return@launch
 
                 val config = HardwareConfig(
-                    id = generateUUID(),
+                    id = data.Info.Id,
                     name = name,
                     timestamp = Clock.System.now().toEpochMilliseconds(),
                     systemInfo = data.Info,
@@ -98,6 +104,8 @@ class HardwareViewModel(
                     currentStats = null
                 )
             } catch (e: Exception) {
+                println("[HardwareViewModel] Erro ao salvar configuração: ${e.message}")
+                e.printStackTrace()
                 uiState = uiState.copy(error = "Erro ao salvar configuração: ${e.message}")
             }
         }
@@ -143,19 +151,3 @@ data class HardwareUiState(
     val selectedForComparison: List<HardwareConfig> = emptyList()
 )
 
-private fun generateUUID(): String {
-    val chars = "0123456789abcdef"
-    return buildString {
-        repeat(8) { append(chars.random()) }
-        append('-')
-        repeat(4) { append(chars.random()) }
-        append('-')
-        append('4')
-        repeat(3) { append(chars.random()) }
-        append('-')
-        append(chars.random())
-        repeat(3) { append(chars.random()) }
-        append('-')
-        repeat(12) { append(chars.random()) }
-    }
-}
