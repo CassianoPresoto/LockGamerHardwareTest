@@ -92,7 +92,7 @@ private fun ConfigCard(
                 )
                 
                 Text(
-                    text = config.systemInfo.GameName,
+                    text = config.systemInfo.gameName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

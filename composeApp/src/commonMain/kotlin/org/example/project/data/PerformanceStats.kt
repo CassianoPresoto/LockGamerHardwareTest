@@ -19,7 +19,7 @@ data class PerformanceStats(
 ) {
     companion object {
         fun fromCaptureData(data: CaptureData): PerformanceStats {
-            val frameTimes = data.MsBetweenPresents
+            val frameTimes = data.msBetweenPresents
             val fps = frameTimes.map { if (it > 0) 1000.0 / it else 0.0 }
             
             val sortedFps = fps.sorted()
@@ -37,7 +37,7 @@ data class PerformanceStats(
                 frameTimeMin = sortedFrameTimes.firstOrNull() ?: 0.0,
                 frameTimeMax = sortedFrameTimes.lastOrNull() ?: 0.0,
                 totalFrames = frameTimes.size,
-                duration = data.TimeInSeconds.lastOrNull() ?: 0.0
+                duration = data.timeInSeconds.lastOrNull() ?: 0.0
             )
         }
         

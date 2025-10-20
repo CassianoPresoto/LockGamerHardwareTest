@@ -65,13 +65,13 @@ fun ComparisonScreen(
                 title = "Hardware",
                 configs = configs,
                 rows = listOf(
-                    "CPU" to { it.systemInfo.Processor },
-                    "GPU" to { it.systemInfo.GPU },
-                    "RAM" to { it.systemInfo.SystemRam },
-                    "Driver GPU" to { it.systemInfo.GPUDriverVersion },
-                    "Resizable BAR" to { it.systemInfo.ResizableBar },
-                    "Game Mode" to { it.systemInfo.WinGameMode },
-                    "HAGS" to { it.systemInfo.HAGS }
+                    "CPU" to { it.systemInfo.processor },
+                    "GPU" to { it.systemInfo.gpu },
+                    "RAM" to { it.systemInfo.systemRam },
+                    "Driver GPU" to { it.systemInfo.gpuDriverVersion },
+                    "Resizable BAR" to { it.systemInfo.resizableBar },
+                    "Game Mode" to { it.systemInfo.winGameMode },
+                    "HAGS" to { it.systemInfo.hags }
                 )
             )
         }

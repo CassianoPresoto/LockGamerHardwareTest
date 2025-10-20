@@ -43,7 +43,7 @@ fun SaveConfigDialog(
                     singleLine = true
                 )
                 
-                SystemInfoCard(info = data.Info)
+                SystemInfoCard(info = data.info)
                 PerformanceCard(stats = stats)
             }
         },

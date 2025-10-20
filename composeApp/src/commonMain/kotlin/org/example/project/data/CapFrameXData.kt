@@ -1,61 +1,62 @@
 package org.example.project.data
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class CapFrameXData(
-    val Hash: String,
-    val Info: SystemInfo,
-    val Runs: List<CaptureRun>
+    @SerialName("Hash") val hash: String,
+    @SerialName("Info") val info: SystemInfo,
+    @SerialName("Runs") val runs: List<CaptureRun>
 )
 
 @Serializable
 data class SystemInfo(
-    val AppVersion: String,
-    val Id: String,
-    val Processor: String,
-    val GameName: String,
-    val ProcessName: String,
-    val CreationDate: String,
-    val Motherboard: String,
-    val OS: String,
-    val SystemRam: String,
-    val BaseDriverVersion: String? = null,
-    val GPUDriverVersion: String,
-    val DriverPackage: String? = null,
-    val GPU: String,
-    val GPUCount: String? = null,
-    val GpuCoreClock: String? = null,
-    val GpuMemoryClock: String? = null,
-    val Comment: String? = null,
-    val ApiInfo: String,
-    val ResizableBar: String,
-    val WinGameMode: String,
-    val HAGS: String,
-    val PresentationMode: String,
-    val ResolutionInfo: String? = null
+    @SerialName("AppVersion") val appVersion: String,
+    @SerialName("Id") val id: String,
+    @SerialName("Processor") val processor: String,
+    @SerialName("GameName") val gameName: String,
+    @SerialName("ProcessName") val processName: String,
+    @SerialName("CreationDate") val creationDate: String,
+    @SerialName("Motherboard") val motherboard: String,
+    @SerialName("OS") val os: String,
+    @SerialName("SystemRam") val systemRam: String,
+    @SerialName("BaseDriverVersion") val baseDriverVersion: String? = null,
+    @SerialName("GPUDriverVersion") val gpuDriverVersion: String,
+    @SerialName("DriverPackage") val driverPackage: String? = null,
+    @SerialName("GPU") val gpu: String,
+    @SerialName("GPUCount") val gpuCount: String? = null,
+    @SerialName("GpuCoreClock") val gpuCoreClock: String? = null,
+    @SerialName("GpuMemoryClock") val gpuMemoryClock: String? = null,
+    @SerialName("Comment") val comment: String? = null,
+    @SerialName("ApiInfo") val apiInfo: String,
+    @SerialName("ResizableBar") val resizableBar: String,
+    @SerialName("WinGameMode") val winGameMode: String,
+    @SerialName("HAGS") val hags: String,
+    @SerialName("PresentationMode") val presentationMode: String,
+    @SerialName("ResolutionInfo") val resolutionInfo: String? = null
 )
 
 @Serializable
 data class CaptureRun(
-    val Hash: String,
-    val PresentMonRuntime: String,
-    val CaptureData: CaptureData
+    @SerialName("Hash") val hash: String,
+    @SerialName("PresentMonRuntime") val presentMonRuntime: String,
+    @SerialName("CaptureData") val captureData: CaptureData
 )
 
 @Serializable
 data class CaptureData(
-    val TimeInSeconds: List<Double>,
-    val MsBetweenPresents: List<Double>,
-    val MsInPresentAPI: List<Double>,
-    val MsUntilRenderComplete: List<Double>,
-    val MsUntilDisplayed: List<Double>,
-    val MsBetweenDisplayChange: List<Double>,
-    val AllowsTearing: List<Int>,
-    val PresentMode: List<Int>,
-    val SyncInterval: List<Int>,
-    val Dropped: List<Boolean>,
-    val QPCTime: List<Double>,
-    val GpuActive: List<Double>? = null,
-    val PcLatency: List<Double>? = null
+    @SerialName("TimeInSeconds") val timeInSeconds: List<Double>,
+    @SerialName("MsBetweenPresents") val msBetweenPresents: List<Double>,
+    @SerialName("MsInPresentAPI") val msInPresentAPI: List<Double>,
+    @SerialName("MsUntilRenderComplete") val msUntilRenderComplete: List<Double>,
+    @SerialName("MsUntilDisplayed") val msUntilDisplayed: List<Double>,
+    @SerialName("MsBetweenDisplayChange") val msBetweenDisplayChange: List<Double>,
+    @SerialName("AllowsTearing") val allowsTearing: List<Int>,
+    @SerialName("PresentMode") val presentMode: List<Int>,
+    @SerialName("SyncInterval") val syncInterval: List<Int>,
+    @SerialName("Dropped") val dropped: List<Boolean>,
+    @SerialName("QPCTime") val qpcTime: List<Double>,
+    @SerialName("GpuActive") val gpuActive: List<Double>? = null,
+    @SerialName("PcLatency") val pcLatency: List<Double>? = null
 )

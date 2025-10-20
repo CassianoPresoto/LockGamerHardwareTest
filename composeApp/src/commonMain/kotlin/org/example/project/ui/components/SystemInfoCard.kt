@@ -26,27 +26,27 @@ fun SystemInfoCard(info: SystemInfo, modifier: Modifier = Modifier) {
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))
             
-            InfoRow("Jogo", info.GameName)
-            InfoRow("Processo", info.ProcessName)
+            InfoRow("Jogo", info.gameName)
+            InfoRow("Processo", info.processName)
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))
             
-            InfoRow("CPU", info.Processor)
-            InfoRow("GPU", info.GPU)
-            InfoRow("RAM", info.SystemRam)
-            InfoRow("Placa-Mãe", info.Motherboard)
+            InfoRow("CPU", info.processor)
+            InfoRow("GPU", info.gpu)
+            InfoRow("RAM", info.systemRam)
+            InfoRow("Placa-Mãe", info.motherboard)
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))
             
-            InfoRow("Sistema Operacional", info.OS)
-            InfoRow("Driver GPU", info.GPUDriverVersion)
+            InfoRow("Sistema Operacional", info.os)
+            InfoRow("Driver GPU", info.gpuDriverVersion)
             
             Divider(modifier = Modifier.padding(vertical = 8.dp))
             
-            InfoRow("Resizable BAR", info.ResizableBar)
-            InfoRow("Game Mode", info.WinGameMode)
-            InfoRow("HAGS", info.HAGS)
-            InfoRow("Modo de Apresentação", info.PresentationMode)
+            InfoRow("Resizable BAR", info.resizableBar)
+            InfoRow("Game Mode", info.winGameMode)
+            InfoRow("HAGS", info.hags)
+            InfoRow("Modo de Apresentação", info.presentationMode)
         }
     }
 }

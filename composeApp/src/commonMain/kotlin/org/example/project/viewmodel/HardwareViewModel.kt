@@ -51,7 +51,7 @@ class HardwareViewModel(
 
                 val capFrameXData = json.decodeFromString<CapFrameXData>(jsonContent)
 
-                if (capFrameXData.Runs.isEmpty()) {
+                if (capFrameXData.runs.isEmpty()) {
                     uiState = uiState.copy(
                         isLoading = false,
                         error = "Nenhum dado de captura encontrado no arquivo"
@@ -59,7 +59,7 @@ class HardwareViewModel(
                     return@launch
                 }
 
-                val stats = PerformanceStats.fromCaptureData(capFrameXData.Runs[0].CaptureData)
+                val stats = PerformanceStats.fromCaptureData(capFrameXData.runs[0].captureData)
 
                 uiState = uiState.copy(
                     isLoading = false,
@@ -87,10 +87,10 @@ class HardwareViewModel(
                 val stats = uiState.currentStats ?: return@launch
 
                 val config = HardwareConfig(
-                    id = data.Info.Id,
+                    id = data.info.id,
                     name = name,
                     timestamp = Clock.System.now().toEpochMilliseconds(),
-                    systemInfo = data.Info,
+                    systemInfo = data.info,
                     performanceStats = stats,
                     rawData = data
                 )
