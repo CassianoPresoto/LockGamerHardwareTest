@@ -3,18 +3,21 @@ package org.example.project.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.InsertChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.example.project.ui.FilePicker
 import org.example.project.viewmodel.HardwareViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) {
+fun MainScreen(viewModel: HardwareViewModel = koinInject()) {
     val uiState = viewModel.uiState
     var selectedTab by remember { mutableStateOf(0) }
     var showFilePicker by remember { mutableStateOf(false) }
@@ -32,7 +35,7 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
-                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Configurações") },
+                    icon = { Icon(Icons.Default.SportsEsports, contentDescription = "Configurações") },
                     label = { Text("Configurações") },
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 }
@@ -63,7 +66,7 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
                 )
 
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.BarChart, contentDescription = "Gráficos") },
+                    icon = { Icon(Icons.Default.InsertChart, contentDescription = "Gráficos") },
                     label = { Text("Gráficos") },
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 }

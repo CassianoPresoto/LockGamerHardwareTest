@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -58,6 +59,20 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.coroutines)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+        }
+        androidMain.dependencies {
+            implementation(libs.sqldelight.android)
+            implementation(libs.koin.android)
+        }
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.jvm)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -65,6 +80,14 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+        }
+
+        jsMain.dependencies {
+            implementation(libs.sqldelight.runtime)
+        }
+
+        wasmJsMain.dependencies {
+            implementation(libs.sqldelight.runtime)
         }
     }
 }
@@ -98,6 +121,14 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+}
+
+sqldelight {
+    databases {
+        create("HardwareDatabase") {
+            packageName.set("org.example.project.database")
+        }
+    }
 }
 
 compose.desktop {

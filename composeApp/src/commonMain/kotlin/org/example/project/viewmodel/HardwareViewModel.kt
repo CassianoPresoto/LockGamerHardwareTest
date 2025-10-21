@@ -13,10 +13,9 @@ import org.example.project.data.HardwareConfig
 import org.example.project.data.PerformanceStats
 import org.example.project.data.SaveConfigData
 import org.example.project.repository.ConfigRepository
-import org.example.project.repository.InMemoryConfigRepository
 
 class HardwareViewModel(
-    private val repository: ConfigRepository = InMemoryConfigRepository()
+    private val repository: ConfigRepository
 ) {
     var uiState by mutableStateOf(HardwareUiState())
         private set

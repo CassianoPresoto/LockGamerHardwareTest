@@ -1,0 +1,172 @@
+import com.android.build.gradle.internal.dsl.decorator.SupportedPropertyType.Var.Boolean;
+
+-- Tabela principal de configurações de hardware
+CREATE TABLE IF NOT EXISTS hardware_config (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    
+    -- System Info
+    game_name TEXT NOT NULL,
+    processor TEXT NOT NULL,
+    gpu TEXT NOT NULL,
+    os TEXT NOT NULL,
+    system_ram TEXT NOT NULL,
+    gpu_driver_version TEXT NOT NULL,
+    motherboard TEXT NOT NULL,
+    resizable_bar TEXT NOT NULL,
+    win_game_mode TEXT NOT NULL,
+    hags TEXT NOT NULL,
+    api_info TEXT NOT NULL,
+    
+    -- Graphics Settings
+    graphics_preset TEXT NOT NULL,
+    rtx_enabled INTEGER AS Boolean NOT NULL DEFAULT 0,
+    framegen_enabled INTEGER AS Boolean NOT NULL DEFAULT 0,
+    upscaling_type TEXT NOT NULL,
+    upscaling_quality TEXT,
+    
+    -- Performance Stats
+    avg_fps REAL NOT NULL,
+    min_fps REAL NOT NULL,
+    max_fps REAL NOT NULL,
+    percentile_1 REAL NOT NULL,
+    percentile_5 REAL NOT NULL,
+    percentile_95 REAL NOT NULL,
+    percentile_99 REAL NOT NULL,
+    total_frames INTEGER NOT NULL,
+    duration REAL NOT NULL,
+    
+    -- Raw JSON data (para preservar dados completos)
+    raw_json TEXT NOT NULL
+);
+
+-- Índices para queries rápidas
+CREATE INDEX IF NOT EXISTS idx_game_name ON hardware_config(game_name);
+CREATE INDEX IF NOT EXISTS idx_gpu ON hardware_config(gpu);
+CREATE INDEX IF NOT EXISTS idx_processor ON hardware_config(processor);
+CREATE INDEX IF NOT EXISTS idx_graphics_preset ON hardware_config(graphics_preset);
+CREATE INDEX IF NOT EXISTS idx_upscaling_type ON hardware_config(upscaling_type);
+CREATE INDEX IF NOT EXISTS idx_timestamp ON hardware_config(timestamp DESC);
+
+-- Query: Buscar todas as configurações ordenadas por timestamp
+getAllConfigs:
+SELECT * FROM hardware_config
+ORDER BY timestamp DESC;
+
+-- Query: Buscar configuração por ID
+getConfigById:
+SELECT * FROM hardware_config
+WHERE id = ?;
+
+-- Query: Buscar por jogo específico
+getConfigsByGame:
+SELECT * FROM hardware_config
+WHERE game_name = ?
+ORDER BY timestamp DESC;
+
+-- Query: Buscar por GPU específica
+getConfigsByGpu:
+SELECT * FROM hardware_config
+WHERE gpu = ?
+ORDER BY timestamp DESC;
+
+-- Query: Buscar por CPU específico
+getConfigsByCpu:
+SELECT * FROM hardware_config
+WHERE processor = ?
+ORDER BY timestamp DESC;
+
+-- Query: Buscar por preset gráfico
+getConfigsByPreset:
+SELECT * FROM hardware_config
+WHERE graphics_preset = ?
+ORDER BY timestamp DESC;
+
+-- Query: Buscar por tipo de upscaling
+getConfigsByUpscaling:
+SELECT * FROM hardware_config
+WHERE upscaling_type = ?
+ORDER BY timestamp DESC;
+
+-- Query: Filtro combinado para comparações (jogo + variando apenas uma config)
+-- Exemplo: mesmo jogo, mesma GPU, variando apenas preset
+getConfigsByGameAndGpu:
+SELECT * FROM hardware_config
+WHERE game_name = ? AND gpu = ?
+ORDER BY timestamp DESC;
+
+-- Query: Filtro para gráficos - agrupar por preset
+getAvgFpsByPreset:
+SELECT 
+    graphics_preset,
+    AVG(avg_fps) AS avg_fps,
+    AVG(percentile_1) AS avg_1_low,
+    COUNT(*) AS test_count
+FROM hardware_config
+WHERE game_name = ? AND gpu = ?
+GROUP BY graphics_preset
+ORDER BY avg_fps DESC;
+
+-- Query: Filtro para gráficos - agrupar por upscaling
+getAvgFpsByUpscaling:
+SELECT 
+    upscaling_type,
+    upscaling_quality,
+    AVG(avg_fps) AS avg_fps,
+    AVG(percentile_1) AS avg_1_low,
+    COUNT(*) AS test_count
+FROM hardware_config
+WHERE game_name = ? AND gpu = ? AND graphics_preset = ?
+GROUP BY upscaling_type, upscaling_quality
+ORDER BY avg_fps DESC;
+
+-- Query: Filtro para gráficos - comparar GPUs
+getAvgFpsByGpu:
+SELECT 
+    gpu,
+    AVG(avg_fps) AS avg_fps,
+    AVG(percentile_1) AS avg_1_low,
+    COUNT(*) AS test_count
+FROM hardware_config
+WHERE game_name = ? AND graphics_preset = ?
+GROUP BY gpu
+ORDER BY avg_fps DESC;
+
+-- Query: Buscar jogos únicos
+getUniqueGames:
+SELECT DISTINCT game_name FROM hardware_config
+ORDER BY game_name;
+
+-- Query: Buscar GPUs únicas
+getUniqueGpus:
+SELECT DISTINCT gpu FROM hardware_config
+ORDER BY gpu;
+
+-- Query: Buscar CPUs únicos
+getUniqueCpus:
+SELECT DISTINCT processor FROM hardware_config
+ORDER BY processor;
+
+-- Query: Inserir ou substituir configuração
+insertConfig:
+INSERT OR REPLACE INTO hardware_config (
+    id, name, timestamp,
+    game_name, processor, gpu, os, system_ram, gpu_driver_version,
+    motherboard, resizable_bar, win_game_mode, hags, api_info,
+    graphics_preset, rtx_enabled, framegen_enabled, upscaling_type, upscaling_quality,
+    avg_fps, min_fps, max_fps, percentile_1, percentile_5, percentile_95, percentile_99,
+    total_frames, duration, raw_json
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Query: Deletar configuração
+deleteConfig:
+DELETE FROM hardware_config WHERE id = ?;
+
+-- Query: Deletar todas as configurações
+deleteAllConfigs:
+DELETE FROM hardware_config;
+
+-- Query: Contar total de configurações
+countConfigs:
+SELECT COUNT(*) FROM hardware_config;
