@@ -1,10 +1,21 @@
 package org.example.project.ui.screens
 
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -54,12 +65,27 @@ fun ComparisonScreen(
                     "5% Low" to { formatNumber(it.performanceStats.percentile5, 2) },
                     "95% High" to { formatNumber(it.performanceStats.percentile95, 2) },
                     "99% High" to { formatNumber(it.performanceStats.percentile99, 2) },
-                    "Frame Time Médio" to { formatNumber(it.performanceStats.frameTimeAvg, 2) + " ms" },
                     "Total Frames" to { it.performanceStats.totalFrames.toString() },
                     "Duração" to { formatNumber(it.performanceStats.duration, 2) + " s" }
                 )
             )
-            
+
+            // Graphics Settings Comparison
+            ComparisonTable(
+                title = "Configurações Gráficas",
+                configs = configs,
+                rows = listOf(
+                    "Preset Gráfico" to { it.graphicsPreset.label },
+                    "RTX" to { if (it.rtxEnabled) "Ativado" else "Desativado" },
+                    "Frame Generation" to { if (it.frameGenEnabled) "Ativado" else "Desativado" },
+                    "Tipo de upscaling" to { it.upscaling.type.label },
+                    "Qualidade upscaling" to {
+                        it.upscaling.quality?.label
+                            ?: if (it.upscaling.type.supportsQuality) "Não definido" else "-"
+                    }
+                )
+            )
+
             // System Info Comparison
             ComparisonTable(
                 title = "Hardware",

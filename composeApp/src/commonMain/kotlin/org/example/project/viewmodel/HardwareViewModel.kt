@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import org.example.project.data.CapFrameXData
 import org.example.project.data.HardwareConfig
 import org.example.project.data.PerformanceStats
+import org.example.project.data.SaveConfigData
 import org.example.project.repository.ConfigRepository
 import org.example.project.repository.InMemoryConfigRepository
 
@@ -80,7 +81,7 @@ class HardwareViewModel(
         }
     }
 
-    fun saveCurrentConfig(name: String) {
+    fun saveCurrentConfig(configData: SaveConfigData) {
         viewModelScope.launch {
             try {
                 val data = uiState.currentData ?: return@launch
@@ -88,11 +89,15 @@ class HardwareViewModel(
 
                 val config = HardwareConfig(
                     id = data.info.id,
-                    name = name,
+                    name = configData.name,
                     timestamp = Clock.System.now().toEpochMilliseconds(),
                     systemInfo = data.info,
                     performanceStats = stats,
-                    rawData = data
+                    rawData = data,
+                    graphicsPreset = configData.graphicsPreset,
+                    rtxEnabled = configData.rtxEnabled,
+                    frameGenEnabled = configData.frameGenEnabled,
+                    upscaling = configData.upscaling
                 )
                 
                 repository.saveConfig(config)
