@@ -112,6 +112,47 @@ private fun ConfigCard(
                     )
                 }
                 
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = config.graphicsPreset.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text("•", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = config.upscaling.type.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    config.upscaling.quality?.let { quality ->
+                        Text("•", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = quality.label,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    if (config.rtxEnabled) {
+                        Text("•", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = "RTX",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                    if (config.frameGenEnabled) {
+                        Text("•", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = "FrameGen",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
+                
                 Text(
                     text = formatDate(config.timestamp),
                     style = MaterialTheme.typography.bodySmall,

@@ -9,5 +9,9 @@ data class HardwareConfig(
     val timestamp: Long,
     val systemInfo: SystemInfo,
     val performanceStats: PerformanceStats,
-    val rawData: CapFrameXData
+    val rawData: CapFrameXData,
+    val graphicsPreset: GraphicsPreset,
+    val rtxEnabled: Boolean,
+    val frameGenEnabled: Boolean,
+    val upscaling: UpscalingSettings
 )

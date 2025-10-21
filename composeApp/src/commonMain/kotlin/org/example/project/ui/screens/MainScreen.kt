@@ -107,7 +107,7 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
                 SaveConfigDialog(
                     data = uiState.currentData,
                     stats = uiState.currentStats,
-                    onSave = { name -> viewModel.saveCurrentConfig(name) },
+                    onSave = { configData -> viewModel.saveCurrentConfig(configData) },
                     onDismiss = { viewModel.cancelSave() }
                 )
             }
