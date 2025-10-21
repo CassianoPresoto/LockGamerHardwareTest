@@ -2,8 +2,8 @@ package org.example.project.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,11 +32,19 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = "Configurações") },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Configurações") },
                     label = { Text("Configurações") },
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 }
                 )
+
+                NavigationBarItem(
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Lista") },
+                    label = { Text("Lista") },
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 }
+                )
+
                 NavigationBarItem(
                     icon = {
                         BadgedBox(
@@ -50,8 +58,15 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
                         }
                     },
                     label = { Text("Comparação") },
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 }
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 }
+                )
+
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.BarChart, contentDescription = "Gráficos") },
+                    label = { Text("Gráficos") },
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 }
                 )
             }
         },
@@ -73,8 +88,16 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
                     onConfigClick = { viewModel.selectConfigForComparison(it) },
                     onDeleteConfig = { viewModel.deleteConfig(it) }
                 )
-                1 -> ComparisonScreen(
+                1 -> AllTestsScreen(
+                    configs = uiState.savedConfigs,
+                    selectedConfigs = uiState.selectedForComparison,
+                    onConfigClick = { viewModel.selectConfigForComparison(it) }
+                )
+                2 -> ComparisonScreen(
                     configs = uiState.selectedForComparison
+                )
+                3 -> ChartsScreen(
+                    configs = uiState.savedConfigs
                 )
             }
             
