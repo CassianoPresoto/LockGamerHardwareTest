@@ -26,6 +26,7 @@ class HardwareViewModel(
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
+        allowSpecialFloatingPointValues = true
     }
 
     init {
