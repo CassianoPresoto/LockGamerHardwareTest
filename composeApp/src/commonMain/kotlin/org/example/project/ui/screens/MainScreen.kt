@@ -5,11 +5,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.example.project.ui.FilePicker
+import org.example.project.ui.FolderPicker
+import org.example.project.ui.MultiFilePicker
 import org.example.project.viewmodel.HardwareViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -18,6 +22,9 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
     val uiState = viewModel.uiState
     var selectedTab by remember { mutableStateOf(0) }
     var showFilePicker by remember { mutableStateOf(false) }
+    var showMultiFilePicker by remember { mutableStateOf(false) }
+    var showFolderPicker by remember { mutableStateOf(false) }
+    var showImportMenu by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -72,10 +79,50 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
         },
         floatingActionButton = {
             if (selectedTab == 0) {
-                FloatingActionButton(
-                    onClick = { showFilePicker = true }
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Importar JSON")
+                Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
+                    if (showImportMenu) {
+                        SmallFloatingActionButton(
+                            onClick = { 
+                                showFolderPicker = true
+                                showImportMenu = false
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Icon(Icons.Default.CreateNewFolder, contentDescription = "Importar Pasta")
+                        }
+                        
+                        SmallFloatingActionButton(
+                            onClick = { 
+                                showMultiFilePicker = true
+                                showImportMenu = false
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Múltiplos Arquivos")
+                        }
+                        
+                        SmallFloatingActionButton(
+                            onClick = { 
+                                showFilePicker = true
+                                showImportMenu = false
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Arquivo Único")
+                        }
+                    }
+                    
+                    FloatingActionButton(
+                        onClick = { showImportMenu = !showImportMenu }
+                    ) {
+                        Icon(
+                            if (showImportMenu) Icons.Default.MoreVert else Icons.Default.Add,
+                            contentDescription = "Importar"
+                        )
+                    }
                 }
             }
         }
@@ -101,13 +148,58 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
                 )
             }
             
-            // Loading indicator
+            // Loading indicator with progress
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = androidx.compose.ui.Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    Card(
+                        modifier = Modifier.padding(24.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            if (uiState.batchImportProgress != null) {
+                                Text(
+                                    text = "Importando arquivos...",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = "${uiState.batchImportProgress.current} de ${uiState.batchImportProgress.total}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                LinearProgressIndicator(
+                                    progress = { uiState.batchImportProgress.percentage },
+                                    modifier = Modifier.width(200.dp)
+                                )
+                            } else {
+                                CircularProgressIndicator()
+                                Text(
+                                    text = "Processando...",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Success message
+            uiState.batchImportSuccess?.let { message ->
+                Snackbar(
+                    modifier = Modifier.padding(16.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    action = {
+                        TextButton(onClick = { viewModel.clearBatchImportSuccess() }) {
+                            Text("OK")
+                        }
+                    }
+                ) {
+                    Text(message)
                 }
             }
             
@@ -125,7 +217,7 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
                 }
             }
             
-            // Save dialog
+            // Save dialog (single file)
             if (uiState.showSaveDialog && uiState.currentData != null && uiState.currentStats != null) {
                 SaveConfigDialog(
                     data = uiState.currentData,
@@ -134,10 +226,20 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
                     onDismiss = { viewModel.cancelSave() }
                 )
             }
+            
+            // Batch config dialog (multiple files)
+            if (uiState.showBatchConfigDialog && uiState.batchParsedData != null) {
+                BatchConfigDialog(
+                    fileCount = uiState.batchParsedData.size,
+                    errors = uiState.batchImportErrors,
+                    onSave = { configData -> viewModel.saveBatchConfigs(configData) },
+                    onDismiss = { viewModel.cancelBatchImport() }
+                )
+            }
         }
     }
     
-    // File picker
+    // File pickers
     FilePicker(
         show = showFilePicker,
         fileExtensions = listOf("json"),
@@ -146,5 +248,25 @@ fun MainScreen(viewModel: HardwareViewModel = remember { HardwareViewModel() }) 
             showFilePicker = false
         },
         onDismiss = { showFilePicker = false }
+    )
+    
+    MultiFilePicker(
+        show = showMultiFilePicker,
+        fileExtensions = listOf("json"),
+        onFilesSelected = { contents ->
+            viewModel.parseMultipleJsonFiles(contents)
+            showMultiFilePicker = false
+        },
+        onDismiss = { showMultiFilePicker = false }
+    )
+    
+    FolderPicker(
+        show = showFolderPicker,
+        fileExtensions = listOf("json"),
+        onFilesSelected = { contents ->
+            viewModel.parseMultipleJsonFiles(contents)
+            showFolderPicker = false
+        },
+        onDismiss = { showFolderPicker = false }
     )
 }

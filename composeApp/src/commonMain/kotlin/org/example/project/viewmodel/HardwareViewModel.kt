@@ -81,6 +81,147 @@ class HardwareViewModel(
             }
         }
     }
+    
+    fun parseMultipleJsonFiles(jsonContents: List<String>) {
+        viewModelScope.launch {
+            try {
+                uiState = uiState.copy(isLoading = true, error = null)
+                
+                val parsedDataList = mutableListOf<Pair<CapFrameXData, PerformanceStats>>()
+                val errors = mutableListOf<String>()
+                
+                jsonContents.forEachIndexed { index, jsonContent ->
+                    try {
+                        val capFrameXData = json.decodeFromString<CapFrameXData>(jsonContent)
+                        
+                        if (capFrameXData.runs.isNotEmpty()) {
+                            val stats = PerformanceStats.fromCaptureData(capFrameXData.runs[0].captureData)
+                            parsedDataList.add(capFrameXData to stats)
+                        } else {
+                            errors.add("Arquivo ${index + 1}: Sem dados de captura")
+                        }
+                    } catch (e: Exception) {
+                        errors.add("Arquivo ${index + 1}: ${e.message}")
+                        println("[HardwareViewModel] Erro no arquivo ${index + 1}: ${e.message}")
+                    }
+                }
+                
+                if (parsedDataList.isEmpty()) {
+                    uiState = uiState.copy(
+                        isLoading = false,
+                        error = "Nenhum arquivo válido encontrado\n${errors.take(3).joinToString("\n")}"
+                    )
+                    return@launch
+                }
+                
+                // Store parsed data and show batch config dialog
+                uiState = uiState.copy(
+                    isLoading = false,
+                    batchParsedData = parsedDataList,
+                    showBatchConfigDialog = true,
+                    batchImportErrors = errors.ifEmpty { null }
+                )
+            } catch (e: Exception) {
+                println("[HardwareViewModel] Erro na importação em massa: ${e.message}")
+                e.printStackTrace()
+                uiState = uiState.copy(
+                    isLoading = false,
+                    error = "Erro na importação em massa: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    fun saveBatchConfigs(configData: SaveConfigData) {
+        viewModelScope.launch {
+            try {
+                val parsedData = uiState.batchParsedData ?: return@launch
+                
+                uiState = uiState.copy(
+                    isLoading = true,
+                    showBatchConfigDialog = false,
+                    batchImportProgress = BatchImportProgress(0, parsedData.size)
+                )
+                
+                var successCount = 0
+                
+                parsedData.forEachIndexed { index, (capFrameXData, stats) ->
+                    try {
+                        // Generate name with game and hardware info
+                        val gameName = capFrameXData.info.gameName.ifBlank { "Unknown" }
+                        val gpuName = capFrameXData.info.gpu.split(" ").takeLast(2).joinToString(" ")
+                        val configName = "$gameName - $gpuName"
+                        
+                        val config = HardwareConfig(
+                            id = capFrameXData.info.id,
+                            name = configName,
+                            timestamp = Clock.System.now().toEpochMilliseconds(),
+                            systemInfo = capFrameXData.info,
+                            performanceStats = stats,
+                            rawData = capFrameXData,
+                            graphicsPreset = configData.graphicsPreset,
+                            rtxEnabled = configData.rtxEnabled,
+                            frameGenEnabled = configData.frameGenEnabled,
+                            upscaling = configData.upscaling
+                        )
+                        
+                        repository.saveConfig(config)
+                        successCount++
+                    } catch (e: Exception) {
+                        println("[HardwareViewModel] Erro ao salvar config ${index + 1}: ${e.message}")
+                    }
+                    
+                    // Update progress
+                    uiState = uiState.copy(
+                        batchImportProgress = BatchImportProgress(index + 1, parsedData.size)
+                    )
+                }
+                
+                loadConfigs()
+                
+                val errorCount = parsedData.size - successCount
+                val message = buildString {
+                    append("Importação concluída: ")
+                    append("$successCount sucesso(s)")
+                    if (errorCount > 0) {
+                        append(", $errorCount erro(s)")
+                    }
+                    val previousErrors = uiState.batchImportErrors
+                    if (previousErrors != null && previousErrors.isNotEmpty()) {
+                        append("\n${previousErrors.take(3).joinToString("\n")}")
+                    }
+                }
+                
+                uiState = uiState.copy(
+                    isLoading = false,
+                    batchImportProgress = null,
+                    batchParsedData = null,
+                    batchImportErrors = null,
+                    batchImportSuccess = message
+                )
+            } catch (e: Exception) {
+                println("[HardwareViewModel] Erro ao salvar configurações em lote: ${e.message}")
+                e.printStackTrace()
+                uiState = uiState.copy(
+                    isLoading = false,
+                    batchImportProgress = null,
+                    error = "Erro ao salvar configurações: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    fun cancelBatchImport() {
+        uiState = uiState.copy(
+            showBatchConfigDialog = false,
+            batchParsedData = null,
+            batchImportErrors = null
+        )
+    }
+    
+    fun clearBatchImportSuccess() {
+        uiState = uiState.copy(batchImportSuccess = null)
+    }
 
     fun saveCurrentConfig(configData: SaveConfigData) {
         viewModelScope.launch {
@@ -154,6 +295,18 @@ data class HardwareUiState(
     val currentStats: PerformanceStats? = null,
     val showSaveDialog: Boolean = false,
     val savedConfigs: List<HardwareConfig> = emptyList(),
-    val selectedForComparison: List<HardwareConfig> = emptyList()
+    val selectedForComparison: List<HardwareConfig> = emptyList(),
+    val batchImportProgress: BatchImportProgress? = null,
+    val batchImportSuccess: String? = null,
+    val batchParsedData: List<Pair<CapFrameXData, PerformanceStats>>? = null,
+    val showBatchConfigDialog: Boolean = false,
+    val batchImportErrors: List<String>? = null
 )
+
+data class BatchImportProgress(
+    val current: Int,
+    val total: Int
+) {
+    val percentage: Float get() = if (total > 0) (current.toFloat() / total.toFloat()) else 0f
+}
 

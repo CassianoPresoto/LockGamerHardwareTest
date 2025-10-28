@@ -11,7 +11,36 @@ actual fun FilePicker(
     onDismiss: () -> Unit
 ) {
     // TODO: Implementar UIDocumentPicker para iOS.
-    // Por enquanto, apenas descarta quando solicitado para não quebrar a compilação.
+    LaunchedEffect(show) {
+        if (show) {
+            onDismiss()
+        }
+    }
+}
+
+@Composable
+actual fun MultiFilePicker(
+    show: Boolean,
+    fileExtensions: List<String>,
+    onFilesSelected: (List<String>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // TODO: Implementar UIDocumentPicker com múltipla seleção para iOS.
+    LaunchedEffect(show) {
+        if (show) {
+            onDismiss()
+        }
+    }
+}
+
+@Composable
+actual fun FolderPicker(
+    show: Boolean,
+    fileExtensions: List<String>,
+    onFilesSelected: (List<String>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // TODO: Implementar UIDocumentPicker com seleção de pasta para iOS.
     LaunchedEffect(show) {
         if (show) {
             onDismiss()

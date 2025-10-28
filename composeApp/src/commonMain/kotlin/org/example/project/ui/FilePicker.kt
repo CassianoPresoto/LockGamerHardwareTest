@@ -9,3 +9,19 @@ expect fun FilePicker(
     onFileSelected: (String) -> Unit,
     onDismiss: () -> Unit
 )
+
+@Composable
+expect fun MultiFilePicker(
+    show: Boolean,
+    fileExtensions: List<String> = listOf("json"),
+    onFilesSelected: (List<String>) -> Unit,
+    onDismiss: () -> Unit
+)
+
+@Composable
+expect fun FolderPicker(
+    show: Boolean,
+    fileExtensions: List<String> = listOf("json"),
+    onFilesSelected: (List<String>) -> Unit,
+    onDismiss: () -> Unit
+)
