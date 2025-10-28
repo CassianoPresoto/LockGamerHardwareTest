@@ -48,3 +48,80 @@ actual fun FilePicker(
         }
     }
 }
+
+@Composable
+actual fun MultiFilePicker(
+    show: Boolean,
+    fileExtensions: List<String>,
+    onFilesSelected: (List<String>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    LaunchedEffect(show) {
+        if (show) {
+            val input = document.createElement("input") as HTMLInputElement
+            input.type = "file"
+            input.multiple = true
+            input.accept = ".json,application/json"
+            
+            input.onchange = { event ->
+                val files = input.files
+                if (files != null && files.length > 0) {
+                    val contents = mutableListOf<String>()
+                    var filesRead = 0
+                    
+                    for (i in 0 until files.length) {
+                        val file = files[i]
+                        if (file != null) {
+                            val reader = FileReader()
+                            reader.onload = { loadEvent ->
+                                val content = reader.result as? String
+                                if (content != null) {
+                                    contents.add(content)
+                                }
+                                filesRead++
+                                if (filesRead == files.length) {
+                                    if (contents.isNotEmpty()) {
+                                        onFilesSelected(contents)
+                                    } else {
+                                        onDismiss()
+                                    }
+                                }
+                            }
+                            reader.onerror = {
+                                filesRead++
+                                if (filesRead == files.length) {
+                                    if (contents.isNotEmpty()) {
+                                        onFilesSelected(contents)
+                                    } else {
+                                        onDismiss()
+                                    }
+                                }
+                            }
+                            reader.readAsText(file)
+                        }
+                    }
+                } else {
+                    onDismiss()
+                }
+            }
+            
+            input.oncancel = {
+                onDismiss()
+            }
+            
+            input.click()
+        }
+    }
+}
+
+@Composable
+actual fun FolderPicker(
+    show: Boolean,
+    fileExtensions: List<String>,
+    onFilesSelected: (List<String>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Web doesn't support folder picker with file reading
+    // Fallback to multi-file picker
+    MultiFilePicker(show, fileExtensions, onFilesSelected, onDismiss)
+}
