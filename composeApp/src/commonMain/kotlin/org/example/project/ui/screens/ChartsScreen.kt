@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -88,99 +87,125 @@ fun ChartsScreen(
     contentPadding: PaddingValues = PaddingValues(16.dp)
 ) {
     var selectedGame by remember { mutableStateOf<String?>(null) }
-    var selectedGpu by remember { mutableStateOf<String?>(null) }
-    var selectedCpu by remember { mutableStateOf<String?>(null) }
-    var selectedResolution by remember { mutableStateOf<String?>(null) }
+    var selectedConfigs by remember { mutableStateOf<List<HardwareConfig>>(emptyList()) }
     var show1PercentLow by remember { mutableStateOf(false) }
     
     val gameGroups = configs.groupBy { it.rawData.info.gameName.ifBlank { "Jogo desconhecido" } }
     val allGames = gameGroups.keys.toList().sorted()
-    val allGpus = configs.map { it.systemInfo.gpu }.distinct().sorted()
-    val allCpus = configs.map { it.systemInfo.processor }.distinct().sorted()
-    val allResolutions = configs.mapNotNull { it.systemInfo.resolutionInfo }.distinct().sorted()
     
-    // Apply filters
-    val filteredConfigs = configs.filter { config ->
-        (selectedGame == null || config.rawData.info.gameName.ifBlank { "Jogo desconhecido" } == selectedGame) &&
-        (selectedGpu == null || config.systemInfo.gpu == selectedGpu) &&
-        (selectedCpu == null || config.systemInfo.processor == selectedCpu) &&
-        (selectedResolution == null || config.systemInfo.resolutionInfo == selectedResolution)
+    // Get configs for selected game
+    val availableConfigs = if (selectedGame != null) {
+        gameGroups[selectedGame] ?: emptyList()
+    } else {
+        emptyList()
     }
     
-    val filteredGameGroups = filteredConfigs.groupBy { it.rawData.info.gameName.ifBlank { "Jogo desconhecido" } }
-    val nonEmpty = filteredConfigs.filter { it.performanceStats.avgFps > 0 }
-    val maxAvg = nonEmpty.maxOfOrNull { it.performanceStats.avgFps } ?: 0.0
+    val maxAvg = selectedConfigs.maxOfOrNull { it.performanceStats.avgFps } ?: 0.0
 
-    if (configs.isEmpty()) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Nenhum dado para gerar gráficos",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = modifier.fillMaxSize(),
-            contentPadding = contentPadding,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                FilterSection(
-                    allGames = allGames,
-                    allGpus = allGpus,
-                    allCpus = allCpus,
-                    allResolutions = allResolutions,
-                    selectedGame = selectedGame,
-                    selectedGpu = selectedGpu,
-                    selectedCpu = selectedCpu,
-                    selectedResolution = selectedResolution,
-                    show1PercentLow = show1PercentLow,
-                    onGameSelected = { selectedGame = it },
-                    onGpuSelected = { selectedGpu = it },
-                    onCpuSelected = { selectedCpu = it },
-                    onResolutionSelected = { selectedResolution = it },
-                    onToggle1PercentLow = { show1PercentLow = it },
-                    onClearFilters = {
-                        selectedGame = null
-                        selectedGpu = null
-                        selectedCpu = null
-                        selectedResolution = null
-                    }
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        // Header with game selection and options
+        ChartHeaderSection(
+            allGames = allGames,
+            selectedGame = selectedGame,
+            show1PercentLow = show1PercentLow,
+            onGameSelected = { 
+                selectedGame = it
+                selectedConfigs = emptyList()
+            },
+            onToggle1PercentLow = { show1PercentLow = it }
+        )
+        
+        if (configs.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Nenhum dado para gerar gráficos",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
-            if (filteredConfigs.isEmpty()) {
+        } else if (selectedGame == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "📊",
+                        style = MaterialTheme.typography.displayMedium
+                    )
+                    Text(
+                        text = "Selecione um jogo para começar",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Escolha um jogo no menu acima",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                    ConfigSelectionSection(
+                        availableConfigs = availableConfigs,
+                        selectedConfigs = selectedConfigs,
+                        onConfigToggle = { config ->
+                            selectedConfigs = if (selectedConfigs.contains(config)) {
+                                selectedConfigs - config
+                            } else {
+                                selectedConfigs + config
+                            }
+                        },
+                        onClearSelection = { selectedConfigs = emptyList() }
+                    )
+                }
+                
+                if (selectedConfigs.size >= 2) {
+                    item {
+                        GameComparisonCard(
+                            gameName = selectedGame ?: "Comparação",
+                            configs = selectedConfigs,
+                            maxAvg = maxAvg,
+                            show1PercentLow = show1PercentLow
+                        )
+                    }
+                } else if (selectedConfigs.size == 1) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
-                            Text(
-                                text = "Nenhum resultado encontrado com os filtros selecionados",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Selecione pelo menos 2 configurações para comparar",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
-                }
-            } else {
-                items(filteredGameGroups.entries.toList(), key = { it.key }) { (gameName, gameConfigs) ->
-                    GameComparisonCard(
-                        gameName = gameName,
-                        configs = gameConfigs,
-                        maxAvg = maxAvg,
-                        show1PercentLow = show1PercentLow
-                    )
                 }
             }
         }
@@ -611,36 +636,96 @@ private fun ConfigChip(label: String, color: Color) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FilterSection(
+private fun ChartHeaderSection(
     allGames: List<String>,
-    allGpus: List<String>,
-    allCpus: List<String>,
-    allResolutions: List<String>,
     selectedGame: String?,
-    selectedGpu: String?,
-    selectedCpu: String?,
-    selectedResolution: String?,
     show1PercentLow: Boolean,
     onGameSelected: (String?) -> Unit,
-    onGpuSelected: (String?) -> Unit,
-    onCpuSelected: (String?) -> Unit,
-    onResolutionSelected: (String?) -> Unit,
-    onToggle1PercentLow: (Boolean) -> Unit,
-    onClearFilters: () -> Unit
+    onToggle1PercentLow: (Boolean) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val hasActiveFilters = selectedGame != null || selectedGpu != null || selectedCpu != null || selectedResolution != null
+    var expandedGame by remember { mutableStateOf(false) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (hasActiveFilters) 
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            else 
-                MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Game Selector
+            ExposedDropdownMenuBox(
+                expanded = expandedGame,
+                onExpandedChange = { expandedGame = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = selectedGame ?: "Selecione um jogo",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Jogo") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGame) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    )
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedGame,
+                    onDismissRequest = { expandedGame = false }
+                ) {
+                    allGames.forEach { game ->
+                        DropdownMenuItem(
+                            text = { Text(game) },
+                            onClick = {
+                                onGameSelected(game)
+                                expandedGame = false
+                            }
+                        )
+                    }
+                }
+            }
+            
+            // 1% Low Toggle
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "1% Low",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Switch(
+                    checked = show1PercentLow,
+                    onCheckedChange = onToggle1PercentLow
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConfigSelectionSection(
+    availableConfigs: List<HardwareConfig>,
+    selectedConfigs: List<HardwareConfig>,
+    onConfigToggle: (HardwareConfig) -> Unit,
+    onClearSelection: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -656,11 +741,11 @@ private fun FilterSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Filtros",
+                        text = "Selecione Configurações para Comparar",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
-                    if (hasActiveFilters) {
+                    if (selectedConfigs.isNotEmpty()) {
                         Box(
                             modifier = Modifier
                                 .clip(CircleShape)
@@ -668,7 +753,7 @@ private fun FilterSection(
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = listOf(selectedGame, selectedGpu, selectedCpu, selectedResolution).count { it != null }.toString(),
+                                text = selectedConfigs.size.toString(),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 fontWeight = FontWeight.Bold
@@ -677,146 +762,104 @@ private fun FilterSection(
                     }
                 }
                 
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (hasActiveFilters) {
-                        Text(
-                            text = "Limpar",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .clickable { onClearFilters() }
-                                .padding(8.dp)
-                        )
-                    }
-                    IconButton(onClick = { expanded = !expanded }) {
-                        Icon(
-                            imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (expanded) "Recolher" else "Expandir"
-                        )
-                    }
+                if (selectedConfigs.isNotEmpty()) {
+                    Text(
+                        text = "Limpar",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clickable { onClearSelection() }
+                            .padding(8.dp)
+                    )
                 }
             }
             
-            if (expanded) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Exibir 1% Low FPS",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
+            if (availableConfigs.isEmpty()) {
+                Text(
+                    text = "Nenhuma configuração disponível para este jogo",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    availableConfigs.forEach { config ->
+                        ConfigSelectionItem(
+                            config = config,
+                            isSelected = selectedConfigs.contains(config),
+                            onClick = { onConfigToggle(config) }
                         )
-                        Switch(
-                            checked = show1PercentLow,
-                            onCheckedChange = onToggle1PercentLow
-                        )
-                    }
-                    
-                    if (allGames.size > 1) {
-                        Text(
-                            text = "Jogo/Aplicação",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                label = "Todos",
-                                selected = selectedGame == null,
-                                onClick = { onGameSelected(null) }
-                            )
-                            allGames.take(3).forEach { game ->
-                                FilterChip(
-                                    label = game.take(20),
-                                    selected = selectedGame == game,
-                                    onClick = { onGameSelected(if (selectedGame == game) null else game) }
-                                )
-                            }
-                        }
-                    }
-                    
-                    if (allGpus.size > 1) {
-                        Text(
-                            text = "GPU",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                label = "Todas",
-                                selected = selectedGpu == null,
-                                onClick = { onGpuSelected(null) }
-                            )
-                            allGpus.take(3).forEach { gpu ->
-                                FilterChip(
-                                    label = gpu.take(20),
-                                    selected = selectedGpu == gpu,
-                                    onClick = { onGpuSelected(if (selectedGpu == gpu) null else gpu) }
-                                )
-                            }
-                        }
-                    }
-                    
-                    if (allCpus.size > 1) {
-                        Text(
-                            text = "CPU",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                label = "Todas",
-                                selected = selectedCpu == null,
-                                onClick = { onCpuSelected(null) }
-                            )
-                            allCpus.take(3).forEach { cpu ->
-                                FilterChip(
-                                    label = cpu.take(20),
-                                    selected = selectedCpu == cpu,
-                                    onClick = { onCpuSelected(if (selectedCpu == cpu) null else cpu) }
-                                )
-                            }
-                        }
-                    }
-                    
-                    if (allResolutions.isNotEmpty()) {
-                        Text(
-                            text = "Resolução",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                label = "Todas",
-                                selected = selectedResolution == null,
-                                onClick = { onResolutionSelected(null) }
-                            )
-                            allResolutions.take(4).forEach { resolution ->
-                                FilterChip(
-                                    label = resolution,
-                                    selected = selectedResolution == resolution,
-                                    onClick = { onResolutionSelected(if (selectedResolution == resolution) null else resolution) }
-                                )
-                            }
-                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ConfigSelectionItem(
+    config: HardwareConfig,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) 
+                MaterialTheme.colorScheme.primaryContainer 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = if (isSelected) 
+            androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) 
+        else 
+            null
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = config.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "GPU: ${config.systemInfo.gpu.split(" ").takeLast(2).joinToString(" ")}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${formatNumber(config.performanceStats.avgFps, 1)} FPS",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = null
+            )
         }
     }
 }
